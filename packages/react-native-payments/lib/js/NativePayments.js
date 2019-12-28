@@ -28,7 +28,7 @@ const NativePayments: {
         ReactNativePayments.canMakePayments(
           methodData,
           (err) => reject(err),
-          (canMakePayments) => resolve(true)
+          (canMakePayments) => resolve(canMakePayments)
         );
 
         return;
