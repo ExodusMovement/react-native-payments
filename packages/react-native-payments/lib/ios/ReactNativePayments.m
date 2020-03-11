@@ -331,8 +331,9 @@ RCT_EXPORT_METHOD(handleDetailsUpdate: (NSDictionary *)details
     NSDictionary* capabilities = options[@"merchantCapabilities"];
     if (capabilities == nil) return;
 
+    // mutually exclusive with 3DS
     if ([capabilities valueForKey:@"emv"]) {
-        self.paymentRequest.merchantCapabilities |= PKMerchantCapabilityEMV;
+        self.paymentRequest.merchantCapabilities = PKMerchantCapabilityEMV;
     }
 
     if ([capabilities valueForKey:@"debit"]) {
