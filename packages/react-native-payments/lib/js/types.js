@@ -44,6 +44,8 @@ export type PaymentDetailsModifier = {
 // https://www.w3.org/TR/payment-request/#paymentshippingtype-enum
 export type PaymentShippingType = 'shipping' | 'delivery' | 'pickup';
 
+export type PaymentMerchantCapability = 'emv' | 'debit' | 'credit'
+
 // https://www.w3.org/TR/payment-request/#paymentoptions-dictionary
 export type PaymentOptions = {
   requestPayerName: boolean,
@@ -51,7 +53,8 @@ export type PaymentOptions = {
   requestPayerPhone: boolean,
   requestShipping: boolean,
   requestBilling: boolean,
-  shippingType: PaymentShippingType
+  shippingType: PaymentShippingType,
+  merchantCapabilities?: PaymentMerchantCapability[]
 };
 
 // https://www.w3.org/TR/payment-request/#paymentitem-dictionary

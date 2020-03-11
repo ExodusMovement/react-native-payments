@@ -48,7 +48,7 @@ RCT_EXPORT_METHOD(createPaymentRequest: (NSDictionary *)methodData
     
     self.paymentRequest = [[PKPaymentRequest alloc] init];
     self.paymentRequest.merchantIdentifier = merchantId;
-    self.paymentRequest.merchantCapabilities = PKMerchantCapability3DS;
+    [self setMerchantCapabilitiesFromOptions:options];
     self.paymentRequest.countryCode = methodData[@"countryCode"];
     self.paymentRequest.currencyCode = methodData[@"currencyCode"];
     self.paymentRequest.supportedNetworks = [self getSupportedNetworksFromMethodData:methodData];
@@ -322,6 +322,26 @@ RCT_EXPORT_METHOD(handleDetailsUpdate: (NSDictionary *)details
     }
     
     return shippingMethod;
+}
+
+- (void)setMerchantCapabilitiesFromOptions:(NSDictionary *_Nonnull)options
+{
+    self.paymentRequest.merchantCapabilities = PKMerchantCapability3DS;
+
+    NSDictionary* capabilities = options[@"merchantCapabilities"];
+    if (capabilities == nil) return;
+
+    if ([capabilities valueForKey:@"emv"]) {
+        self.paymentRequest.merchantCapabilities |= PKMerchantCapabilityEMV;
+    }
+
+    if ([capabilities valueForKey:@"debit"]) {
+        self.paymentRequest.merchantCapabilities |= PKMerchantCapabilityDebit;
+    }
+
+    if ([capabilities valueForKey:@"credit"]) {
+        self.paymentRequest.merchantCapabilities |= PKMerchantCapabilityCredit;
+    }
 }
 
 - (void)setRequiredShippingAddressFieldsFromOptions:(NSDictionary *_Nonnull)options

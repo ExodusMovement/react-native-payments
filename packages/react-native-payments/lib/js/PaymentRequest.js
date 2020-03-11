@@ -126,6 +126,16 @@ export default class PaymentRequest {
     details?: PaymentDetailsInit = [],
     options?: PaymentOptions = {}
   ) {
+    options = { ...options };
+
+    const { merchantCapabilities } = options;
+    if (merchantCapabilities) {
+      options.merchantCapabilities = merchantCapabilities.reduce((capabilitiesMap, capability) => {
+        capabilitiesMap[capability] = true;
+        return capabilitiesMap;
+      }, {});
+    }
+
     // 1. If the current settings object's responsible document is not allowed to use the feature indicated by attribute name allowpaymentrequest, then throw a " SecurityError" DOMException.
     noop();
 
@@ -501,5 +511,9 @@ export default class PaymentRequest {
   }
 
   static canMakePaymentsUsingNetworks = NativePayments.canMakePaymentsUsingNetworks;
+  static MerchantCapabilities = {
+    debit: 'debit',
+    credit: 'dredit',
+    emv: 'emv',
+  }
 }
-
