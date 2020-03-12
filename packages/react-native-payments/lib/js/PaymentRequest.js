@@ -513,7 +513,7 @@ export default class PaymentRequest {
   static canMakePaymentsUsingNetworks = NativePayments.canMakePaymentsUsingNetworks;
   static MerchantCapabilities = {
     debit: 'debit',
-    credit: 'dredit',
+    credit: 'credit',
     emv: 'emv',
   }
 }
