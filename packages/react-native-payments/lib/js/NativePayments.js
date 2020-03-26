@@ -177,7 +177,7 @@ const NativePayments: {
     });
   },
 
-  openPaymentSetup: ReactNativePayments.openPaymentSetup || noop
+  openPaymentSetup: ReactNativePayments && ReactNativePayments.openPaymentSetup || noop
 };
 
 export default NativePayments;
