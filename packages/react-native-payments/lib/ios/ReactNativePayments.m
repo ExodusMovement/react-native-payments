@@ -517,4 +517,13 @@ RCT_EXPORT_METHOD(handleDetailsUpdate: (NSDictionary *)details
     return (NSString *)[arr objectAtIndex:paymentPassActivationState];
 }
 
+- (void)_openPaymentSetup {
+    PKPassLibrary* lib = [[PKPassLibrary alloc] init];
+    [lib openPaymentSetup];
+}
+
+RCT_EXPORT_METHOD(openPaymentSetup) {
+    [self _openPaymentSetup];
+}
+
 @end
