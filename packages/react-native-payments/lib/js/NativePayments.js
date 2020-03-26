@@ -6,6 +6,7 @@ import { NativeModules, Platform } from 'react-native';
 const { ReactNativePayments } = NativeModules;
 
 const IS_ANDROID = Platform.OS === 'android';
+const noop = () => {}
 
 const NativePayments: {
   canMakePayments: boolean,
@@ -174,7 +175,9 @@ const NativePayments: {
         })
       );
     });
-  }
+  },
+
+  openPaymentSetup: ReactNativePayments.openPaymentSetup || noop
 };
 
 export default NativePayments;
