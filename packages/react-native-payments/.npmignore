@@ -1,8 +1,0 @@
-examples
-.babelrc
-.flowconfig
-docs/
-lib/js/__mocks__/
-lib/js/__tests__/
-lib/js/errors/__tests__/
-lib/js/helpers/__tests__/
