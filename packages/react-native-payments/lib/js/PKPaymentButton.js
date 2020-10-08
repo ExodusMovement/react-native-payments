@@ -28,6 +28,7 @@ type Props = $Exact<{
   type: ButtonType,
   width?: number,
   height?: number,
+  cornerRadius?: number,
   onPress: Function,
 }>;
 
@@ -44,6 +45,7 @@ export class PKPaymentButton extends React.Component<Props> {
     buttonStyle: 'black',
     buttonType: 'plain',
     height: 44,
+    cornerRadius: 4,
   };
 
   render() {
@@ -51,6 +53,7 @@ export class PKPaymentButton extends React.Component<Props> {
       <RNPKPaymentButton
         buttonStyle={this.props.style}
         buttonType={this.props.type}
+        cornerRadius={this.props.cornerRadius}
         onPress={this.props.onPress}
         width={this.props.width}
         height={this.props.height}
