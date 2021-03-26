@@ -239,7 +239,7 @@ export default class PaymentRequest {
     // Internal Events
     this._userDismissSubscription = DeviceEventEmitter.addListener(
       USER_DISMISS_EVENT,
-      this._closePaymentRequest.bind(this)
+      () => this._closePaymentRequest(new Error('UserCanceledError'))
     );
     this._userAcceptSubscription = DeviceEventEmitter.addListener(
       USER_ACCEPT_EVENT,
@@ -403,10 +403,10 @@ export default class PaymentRequest {
     return this._acceptPromiseRejecter(new GatewayError(details.error));
   }
 
-  _closePaymentRequest(reject = true) {
+  _closePaymentRequest(error = new Error('AbortError')) {
     this._state = 'closed';
 
-    if (reject) this._acceptPromiseRejecter(new Error('AbortError'));
+    if (error) this._acceptPromiseRejecter(error);
 
     // Remove event listeners before aborting.
     this._removeEventListeners();
@@ -428,7 +428,7 @@ export default class PaymentRequest {
   }
 
   stopRequest() {
-    if (this._state !== 'closed') this._closePaymentRequest(false)
+    if (this._state !== 'closed') this._closePaymentRequest(null)
   }
 
   // https://www.w3.org/TR/payment-request/#onshippingaddresschange-attribute
