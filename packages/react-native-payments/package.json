@@ -21,8 +21,8 @@
   "author": "Naoufal Kadhom",
   "license": "MIT",
   "dependencies": {
+    "@exodus/crypto": "^1.0.0-rc.2",
     "es6-error": "^4.0.2",
-    "uuid": "3.3.2",
     "validator": "^7.0.0"
   },
   "devDependencies": {

@@ -19,7 +19,7 @@ import type PaymentResponseType from './PaymentResponse';
 
 // Modules
 import { DeviceEventEmitter, Platform } from 'react-native';
-import uuid from 'uuid/v4';
+import { randomUUID } from '@exodus/crypto/randomUUID'
 
 import NativePayments from './NativePayments';
 import PaymentResponse from './PaymentResponse';
@@ -144,7 +144,7 @@ export default class PaymentRequest {
 
     // 3. Establish the request's id:
     if (!details.id) {
-      details.id = uuid();
+      details.id = randomUUID();
     }
 
     // 4. Process payment methods
