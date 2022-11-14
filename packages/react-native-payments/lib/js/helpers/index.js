@@ -4,7 +4,6 @@ import type {
   PaymentShippingOption
 } from '../types';
 
-import { isDecimal, isFloat, isInt, toFloat, toInt } from 'validator';
 import { DOMException, ConstructorError } from '../errors';
 
 type AmountValue = string | number;
@@ -32,21 +31,11 @@ export function isNegative(amountValue: AmountValue): boolean {
 }
 
 export function isValidStringAmount(stringAmount): boolean {
-  if (stringAmount.endsWith('.')) {
-    return false;
-  }
+  if (typeof stringAmount !== 'string') throw new TypeError('Expected a string');
 
-  return isDecimal(stringAmount);
-}
-
-export function toNumber(string: string): number {
-  if (isFloat(string)) {
-    return toFloat(string);
-  }
-
-  if (isInt(string)) {
-    return toInt(string);
-  }
+  // '9', '.9' and '9.9' are correct
+  // '9.', '.' and '' are not
+  return /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]+)?)$/.test(stringAmount);
 }
 
 export function toString(amountValue: AmountValue) {
