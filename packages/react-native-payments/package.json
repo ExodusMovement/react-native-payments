@@ -1,6 +1,6 @@
 {
   "name": "@exodus/react-native-payments",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "main": "lib/js/index.js",
   "scripts": {
     "run:packager": "cd examples/native && yarn run:packager",
