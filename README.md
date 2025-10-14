@@ -1,5 +1,3 @@
-> This project is currently in __beta and APIs are subject to change.__
-
 # React Native Payments
 [![react-native version](https://img.shields.io/badge/react--native-0.41-0ba7d3.svg?style=flat-square)](http://facebook.github.io/react-native/releases/0.40)
 [![npm](https://img.shields.io/npm/v/react-native-payments.svg?style=flat-square)](https://www.npmjs.com/package/react-native-payments)
@@ -456,12 +454,6 @@ The sandbox environment is a great way to test offline implementation of Apple P
 Provides a button that is used either to trigger payments through Apple Pay or to prompt the user to set up a card.
 [Detailed docs and examples](packages/react-native-payments/docs/ApplePayButton.md)
 
-## Add-ons
-Here's a list of Payment Processors that you can enable via add-ons:
-- [Stripe](https://github.com/naoufal/react-native-payments/blob/master/packages/react-native-payments-addon-stripe)
-- [Braintree](https://github.com/naoufal/react-native-payments/blob/master/packages/react-native-payments-addon-braintree)
-
-🚨 _Note: On Android, Payment Processors are enabled by default._
 
 ## API
 ### [NativePayments](https://github.com/naoufal/react-native-payments/blob/master/packages/react-native-payments/docs/NativePayments.md)
