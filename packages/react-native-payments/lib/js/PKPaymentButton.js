@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import { NativeModules, requireNativeComponent } from 'react-native';
+import { requireNativeComponent } from 'react-native';
 
 type PKPaymentButtonType =
   // A button with the Apple Pay logo only.
