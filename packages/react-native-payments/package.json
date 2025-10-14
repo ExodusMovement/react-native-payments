@@ -14,7 +14,6 @@
     "react",
     "react-native",
     "apple-pay",
-    "stripe",
     "payments"
   ],
   "author": "Naoufal Kadhom",
