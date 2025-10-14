@@ -1,6 +1,6 @@
 {
   "name": "@exodus/react-native-payments",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "main": "lib/js/index.js",
   "scripts": {
     "test": "jest",
