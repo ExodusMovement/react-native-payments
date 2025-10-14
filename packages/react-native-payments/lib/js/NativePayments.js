@@ -1,6 +1,6 @@
 // @flow
 
-import type { PaymentDetailsBase, PaymentComplete } from './types';
+import type { PaymentDetailsBase } from './types';
 
 import { NativeModules, Platform } from 'react-native';
 const { ReactNativePayments } = NativeModules;
@@ -20,7 +20,7 @@ const NativePayments: {
   getFullWalletAndroid: string => Promise<any>
 } = {
   supportedGateways: IS_ANDROID
-    ? ['stripe', 'braintree'] // On Android, Payment Gateways are supported out of the gate.
+    ? ['stripe'] // On Android, Payment Gateways are supported out of the gate.
     : ReactNativePayments ? ReactNativePayments.supportedGateways : [],
 
   canMakePayments(methodData: object) {

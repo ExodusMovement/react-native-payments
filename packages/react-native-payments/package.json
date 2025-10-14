@@ -15,7 +15,6 @@
     "react-native",
     "apple-pay",
     "stripe",
-    "braintree",
     "payments"
   ],
   "author": "Naoufal Kadhom",
