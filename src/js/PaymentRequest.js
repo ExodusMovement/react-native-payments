@@ -1,6 +1,3 @@
-// @flow
-'use strict';
-
 // Types
 import type {
   PaymentMethodData,

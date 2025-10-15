@@ -1,5 +1,3 @@
-// @flow
-
 // Types
 import type {
   PaymentComplete,
