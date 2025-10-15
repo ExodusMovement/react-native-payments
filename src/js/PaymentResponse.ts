@@ -1,15 +1,12 @@
-// Types
 import type {
   PaymentComplete,
   PaymentDetailsInit,
   PaymentAddress
 } from './types';
 
-// Modules
 import NativePayments from './NativePayments';
 
 export default class PaymentResponse {
-  // Internal Slots
   _requestId: string;
   _methodName: string;
   _details: PaymentDetailsInit;
@@ -20,7 +17,16 @@ export default class PaymentResponse {
   _payerEmail: null | string;
   _completeCalled: boolean;
 
-  constructor(paymentResponse: Object) {
+  constructor(paymentResponse: {
+    requestId: string,
+    methodName: string,
+    details: PaymentDetailsInit,
+    shippingAddress: PaymentAddress,
+    shippingOption: string,
+    payerName: string,
+    payerPhone: string,
+    payerEmail: string
+  }) {
     // Set properties as readOnly
     this._requestId = paymentResponse.requestId;
     this._methodName = paymentResponse.methodName;
@@ -83,10 +89,6 @@ export default class PaymentResponse {
 
     this._completeCalled = true;
 
-    return new Promise((resolve, reject) => {
-      return NativePayments.complete(paymentStatus, () => {
-        return resolve(undefined);
-      });
-    });
+    return NativePayments.complete(paymentStatus);
   }
 }
