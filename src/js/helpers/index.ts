@@ -1,18 +1,21 @@
 import type {
   PaymentDetailsInit,
   PaymentItem,
+  PaymentMethodData,
   PaymentShippingOption
 } from '../types';
 
 import { DOMException, ConstructorError } from '../errors';
+import ExtendableError from 'es6-error';
+import { Platform } from 'react-native';
 
 type AmountValue = string | number;
 
-function isNumber(value) {
+function isNumber(value: any): value is number {
   return typeof value === 'number';
 }
 
-function isString(value) {
+function isString(value: any): value is string {
   return typeof value === 'string';
 }
 
@@ -30,7 +33,7 @@ export function isNegative(amountValue: AmountValue): boolean {
   return isNumber(amountValue) ? amountValue < 0 : amountValue.startsWith('-');
 }
 
-export function isValidStringAmount(stringAmount): boolean {
+export function isValidStringAmount(stringAmount: string): boolean {
   if (typeof stringAmount !== 'string')
     throw new TypeError('Expected a string');
 
@@ -59,7 +62,7 @@ export function convertObjectAmountToString(
 
 export function convertDetailAmountsToString(
   details: PaymentDetailsInit
-): PaymentDetailsInit {
+) {
   const nextDetails = Object.keys(details).reduce((acc, key) => {
     if (key === 'total') {
       return Object.assign({}, acc, {
@@ -68,7 +71,7 @@ export function convertDetailAmountsToString(
     }
 
     if (
-      Array.isArray(details[key]) &&
+      Array.isArray(details[key as keyof PaymentDetailsInit] ) &&
       (key === 'displayItems' || key === 'shippingOptions')
     ) {
       return Object.assign({}, acc, {
@@ -79,15 +82,15 @@ export function convertDetailAmountsToString(
     }
 
     return acc;
-  }, {});
+  }, {} as PaymentDetailsInit);
 
   return nextDetails;
 }
 
 export function getPlatformMethodData(
-  methodData: Array<PaymentMethodData>,
-  platformOS: 'ios' | 'android'
-) {
+  methodData: PaymentMethodData[],
+  platformOS: typeof Platform.OS
+): PaymentMethodData['data'] {
   const platformSupportedMethod =
     platformOS === 'ios' ? 'apple-pay' : 'android-pay';
 
@@ -96,15 +99,16 @@ export function getPlatformMethodData(
   );
 
   if (!platformMethod) {
-    throw new DOMException('The payment method is not supported');
+    throw new DOMException("NotSupportedError");
   }
 
   return platformMethod.data;
 }
 
 // Validators
+type AnyError = new (...args: any[]) => Error
 
-export function validateTotal(total, errorType = Error): void {
+export function validateTotal(total: any, errorType: AnyError = ExtendableError) {
   // Should Vailidator take an errorType to prepopulate "Failed to construct 'PaymentRequest'"
 
   if (total === undefined) {
@@ -169,7 +173,7 @@ export function validatePaymentMethods(methodData): Array {
   return serializedMethodData;
 }
 
-export function validateDisplayItems(displayItems, errorType = Error): void {
+export function validateDisplayItems(displayItems, errorType: AnyError = ExtendableError): void {
   // Check that the value of each display item is a valid decimal monetary value
   if (displayItems) {
     displayItems.forEach((item: PaymentItem) => {
@@ -188,7 +192,7 @@ export function validateDisplayItems(displayItems, errorType = Error): void {
   }
 }
 
-export function validateShippingOptions(details, errorType = Error): void {
+export function validateShippingOptions(details, errorType: AnyError = ExtendableError): void {
   if (details.shippingOptions === undefined) {
     return undefined;
   }
@@ -257,54 +261,4 @@ export function getSelectedShippingOption(shippingOptions) {
 
   // Return first shippingOption if no shippingOption was marked as selected
   return shippingOptions[0].id;
-}
-
-// Gateway helpers
-export function hasGatewayConfig(platformMethodData = {}) {
-  if (!platformMethodData) {
-    return false;
-  }
-
-  if (!platformMethodData.paymentMethodTokenizationParameters) {
-    return false;
-  }
-
-  if (!platformMethodData.paymentMethodTokenizationParameters.parameters) {
-    return false;
-  }
-
-  if (
-    typeof platformMethodData.paymentMethodTokenizationParameters.parameters !==
-    'object'
-  ) {
-    return false;
-  }
-
-  if (
-    !platformMethodData.paymentMethodTokenizationParameters.parameters.gateway
-  ) {
-    return false;
-  }
-
-  if (
-    typeof platformMethodData.paymentMethodTokenizationParameters.parameters
-      .gateway !== 'string'
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-export function getGatewayName(platformMethodData) {
-  return platformMethodData.paymentMethodTokenizationParameters.parameters
-    .gateway;
-}
-
-export function validateGateway(selectedGateway = '', supportedGateways = []) {
-  if (!supportedGateways.includes(selectedGateway)) {
-    throw new ConstructorError(
-      `"${selectedGateway}" is not a supported gateway. Visit https://goo.gl/fsxSFi for more info.`
-    );
-  }
 }

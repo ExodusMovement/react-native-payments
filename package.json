@@ -3,6 +3,8 @@
   "version": "1.6.2",
   "main": "lib/js/index.js",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "tsc --build --clean",
     "test": "jest",
     "precommit": "lint-staged"
   },
@@ -26,7 +28,9 @@
     "jest": "20.0.4",
     "lint-staged": "^4.0.0",
     "prettier": "^1.4.4",
-    "react-test-renderer": "16.0.0-alpha.12"
+    "react-native": "0.78.3",
+    "react-test-renderer": "16.0.0-alpha.12",
+    "typescript": "^5.7.0"
   },
   "peerDependencies": {
     "react": ">=15",
@@ -35,7 +39,6 @@
   "jest": {
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/examples/",
       "lib/js/__tests__"
     ]
   },
