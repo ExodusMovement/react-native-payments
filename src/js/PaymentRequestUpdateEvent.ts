@@ -19,23 +19,19 @@ import {
 
 // Errors
 import { DOMException } from './errors';
+import { PaymentDetailsInit } from './types';
 
-function isPromise(value) {
-  if (!value.then) {
-    return false;
-  }
-
-  return typeof value.then === 'function';
+function isPromise(value: any): value is Promise<any> {
+  return !value.then ? false : typeof value.then === 'function';
 }
 
 export default class PaymentRequestUpdateEvent {
   name: string;
   target: PaymentRequest;
-  _waitForUpdate: boolean;
-  _handleDetailsChange: PaymentDetailsModifier => Promise<any>;
-  _resetEvent: any;
 
-  constructor(name, target) {
+  _waitForUpdate: boolean;
+
+  constructor(name: string, target: PaymentRequest) {
     if (
       name !== SHIPPING_ADDRESS_CHANGE_EVENT &&
       name !== SHIPPING_OPTION_CHANGE_EVENT
@@ -49,11 +45,9 @@ export default class PaymentRequestUpdateEvent {
     this.target = target;
     this._waitForUpdate = false;
 
-    this._handleDetailsChange = this._handleDetailsChange.bind(this);
-    this._resetEvent = this._resetEvent.bind(this);
   }
 
-  _handleDetailsChange(value: PaymentDetailsBase) {
+  _handleDetailsChange = (value: PaymentDetailsInit) => {
     const target = this.target;
 
     validateTotal(value.total, DOMException);
@@ -61,16 +55,16 @@ export default class PaymentRequestUpdateEvent {
     validateShippingOptions(value.shippingOptions, DOMException);
 
     // 1. Let details be the result of converting value to a PaymentDetailsUpdate dictionary. If this throws an exception, abort the update with the thrown exception.
-    const details: PaymentDetailsUpdate = Object.assign({}, value);
+    const details: PaymentDetailsInit = Object.assign({}, value);
 
     // 2. Let serializedModifierData be an empty list.
-    let serializedModifierData = [];
+    // let serializedModifierData = [];
 
     // 3. Let selectedShippingOption be null.
-    let selectedShippingOption = null;
+    // let selectedShippingOption = null;
 
     // 4. Let shippingOptions be an empty sequence<PaymentShippingOption>.
-    let shippingOptions = [];
+    // let shippingOptions = [];
 
     // 5. Validate and canonicalize the details:
     // TODO: implmentation
@@ -78,47 +72,12 @@ export default class PaymentRequestUpdateEvent {
     // 6. Update the PaymentRequest using the new details:
     target._details = details;
 
-    // 6.1 If the total member of details is present, then:
-    // if (details.total) {
-    //   target._details = Object.assign({}, target._details, { total: details.total });
-    // }
-
-    // // 6.2 If the displayItems member of details is present, then:
-    // if (details.displayItems) {
-    //   target._details = Object.assign({}, target._details, { displayItems: details.displayItems });
-    // }
-
-    // // 6.3 If the shippingOptions member of details is present, and target.[[options]].requestShipping is true, then:
-    // if (details.shippingOptions && target._options.requestShipping === true) {
-    //   // 6.3.1 Set target.[[details]].shippingOptions to shippingOptions.
-    //   shippingOptions = details.shippingOptions;
-    //   target._details = Object.assign({}, target._details, { shippingOptions });
-
-    //   // 6.3.2 Set the value of target's shippingOption attribute to selectedShippingOption.
-    //   selectedShippingOption = target.shippingOption;
-    // }
-
-    // // 6.4 If the modifiers member of details is present, then:
-    // if (details.modifiers) {
-    //   // 6.4.1 Set target.[[details]].modifiers to details.modifiers.
-    //   target._details = Object.assign({}, target._details, { modifiers: details.modifiers });
-
-    //   // 6.4.2 Set target.[[serializedModifierData]] to serializedModifierData.
-    //   target._serializedModifierData = serializedModifierData;
-    // }
-
-    // 6.5 If target.[[options]].requestShipping is true, and target.[[details]].shippingOptions is empty,
-    // then the developer has signified that there are no valid shipping options for the currently-chosen shipping address (given by target's shippingAddress).
-    // In this case, the user agent should display an error indicating this, and may indicate that that the currently-chosen shipping address is invalid in some way.
-    // The user agent should use the error member of details, if it is present, to give more information about why there are no valid shipping options for that address.
-
-    // React Native Payments specific 👇
-    // ---------------------------------
     const normalizedDetails = convertDetailAmountsToString(target._details);
+
     return (
       NativePayments.handleDetailsUpdate(normalizedDetails, DOMException)
         // 14. Upon fulfillment of detailsPromise with value value
-        .then(this._resetEvent())
+        .then(this._resetEvent)
         // On iOS the `selectedShippingMethod` defaults back to the first option
         // when updating shippingMethods.  So we call the `_handleShippingOptionChange`
         // method with the first shippingOption id so that JS is in sync with Apple Pay.
@@ -145,7 +104,7 @@ export default class PaymentRequestUpdateEvent {
     );
   }
 
-  _resetEvent() {
+  _resetEvent = () => {
     // 1. Set event.[[waitForUpdate]] to false.
     this._waitForUpdate = false;
 
@@ -160,10 +119,7 @@ export default class PaymentRequestUpdateEvent {
   updateWith(
     PaymentDetailsModifierOrPromise:
       | PaymentDetailsUpdate
-      | ((
-          PaymentDetailsModifier,
-          PaymentAddress
-        ) => Promise<PaymentDetailsUpdate>)
+      | Promise<PaymentDetailsUpdate>
   ) {
     // 1. Let event be this PaymentRequestUpdateEvent instance.
     let event = this;

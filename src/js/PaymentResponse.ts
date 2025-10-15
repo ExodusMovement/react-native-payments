@@ -1,4 +1,3 @@
-// @flow
 
 // Types
 import type {
@@ -22,7 +21,7 @@ export default class PaymentResponse {
   _payerEmail: null | string;
   _completeCalled: boolean;
 
-  constructor(paymentResponse: Object) {
+  constructor(paymentResponse: PaymentResponse) {
     // Set properties as readOnly
     this._requestId = paymentResponse.requestId;
     this._methodName = paymentResponse.methodName;
@@ -78,17 +77,13 @@ export default class PaymentResponse {
   }
 
   // https://www.w3.org/TR/payment-request/#complete-method
-  complete(paymentStatus: PaymentComplete) {
+  complete(paymentStatus: PaymentComplete): Promise<void> {
     if (this._completeCalled === true) {
       throw new Error('InvalidStateError');
     }
 
     this._completeCalled = true;
 
-    return new Promise((resolve, reject) => {
-      return NativePayments.complete(paymentStatus, () => {
-        return resolve(undefined);
-      });
-    });
+    return NativePayments.complete(paymentStatus)
   }
 }

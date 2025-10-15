@@ -10,13 +10,13 @@ const ERROR_MESSAGES = {
 };
 
 class ReactNativePaymentsError extends ExtendableError {
-  constructor(errorMessage) {
+  constructor(errorMessage: string) {
     super(`[ReactNativePayments] ${errorMessage}`);
   }
 }
 
 export class DOMException extends ReactNativePaymentsError {
-  constructor(errorType) {
+  constructor(errorType: keyof typeof ERROR_MESSAGES) {
     const errorMessage = ERROR_MESSAGES[errorType] || errorType;
 
     super(`DOMException: ${errorMessage}`);
@@ -24,19 +24,13 @@ export class DOMException extends ReactNativePaymentsError {
 }
 
 export class TypeError extends ReactNativePaymentsError {
-  constructor(errorMessage) {
+  constructor(errorMessage: string) {
     super(`TypeError: ${errorMessage}`);
   }
 }
 
 export class ConstructorError extends ReactNativePaymentsError {
-  constructor(errorMessage) {
+  constructor(errorMessage: string) {
     super(`Failed to construct 'PaymentRequest':  ${errorMessage}`);
-  }
-}
-
-export class GatewayError extends ExtendableError {
-  constructor(errorMessage) {
-    super(`${errorMessage}`);
   }
 }

@@ -1,7 +1,22 @@
-// @flow
-'use strict';
+import { DeviceEventEmitter, EmitterSubscription, Platform } from 'react-native';
+import { randomUUID } from '@exodus/crypto/randomUUID';
 
-// Types
+import type PaymentResponseType from './PaymentResponse';
+import NativePayments from './NativePayments';
+import PaymentResponse from './PaymentResponse';
+import PaymentRequestUpdateEvent from './PaymentRequestUpdateEvent';
+import { ConstructorError } from './errors';
+
+import {
+  convertDetailAmountsToString,
+  getPlatformMethodData,
+  validateTotal,
+  validatePaymentMethods,
+  validateDisplayItems,
+  validateShippingOptions,
+  getSelectedShippingOption,
+} from './helpers';
+
 import type {
   PaymentMethodData,
   PaymentDetailsInit,
@@ -11,33 +26,7 @@ import type {
   PaymentDetailsIOS,
   PaymentDetailsIOSRaw
 } from './types';
-import type PaymentResponseType from './PaymentResponse';
 
-// Modules
-import { DeviceEventEmitter, Platform } from 'react-native';
-import { randomUUID } from '@exodus/crypto/randomUUID';
-
-import NativePayments from './NativePayments';
-import PaymentResponse from './PaymentResponse';
-import PaymentRequestUpdateEvent from './PaymentRequestUpdateEvent';
-
-// Helpers
-import {
-  convertDetailAmountsToString,
-  getPlatformMethodData,
-  validateTotal,
-  validatePaymentMethods,
-  validateDisplayItems,
-  validateShippingOptions,
-  getSelectedShippingOption,
-  hasGatewayConfig,
-  getGatewayName,
-  validateGateway
-} from './helpers';
-
-import { ConstructorError, GatewayError } from './errors';
-
-// Constants
 import {
   SHIPPING_ADDRESS_CHANGE_EVENT,
   SHIPPING_OPTION_CHANGE_EVENT,
@@ -45,7 +34,6 @@ import {
   INTERNAL_SHIPPING_OPTION_CHANGE_EVENT,
   USER_DISMISS_EVENT,
   USER_ACCEPT_EVENT,
-  GATEWAY_ERROR_EVENT
 } from './constants';
 
 const noop = () => {};
@@ -53,41 +41,48 @@ const IS_ANDROID = Platform.OS === 'android';
 const IS_IOS = Platform.OS === 'ios';
 
 export default class PaymentRequest {
-  _id: string;
-  _shippingAddress: null | PaymentAddress;
-  _shippingOption: null | string;
-  _shippingType: null | PaymentShippingType;
+  id: string;
+  shippingAddress: null | PaymentAddress;
+  shippingOption: null | string;
+  shippingType: null | PaymentShippingType;
 
-  // Internal Slots
   _serializedMethodData: string;
-  _serializedModifierData: string;
-  _details: Object;
+  _details: PaymentDetailsInit;
   _options: Object;
   _state: 'created' | 'interactive' | 'closed';
   _updating: boolean;
-  _acceptPromise: Promise<any>;
-  _acceptPromiseResolver: (value: any) => void;
-  _acceptPromiseRejecter: (reason: any) => void;
-  _shippingAddressChangeSubscription: any; // TODO: - add proper type annotation
-  _shippingOptionChangeSubscription: any; // TODO: - add proper type annotation
-  _userDismissSubscription: any; // TODO: - add proper type annotation
-  _userAcceptSubscription: any; // TODO: - add proper type annotation
-  _gatewayErrorSubscription: any; // TODO: - add proper type annotation
+  _acceptPromise?: Promise<any>;
   _shippingAddressChangesCount: number;
 
-  _shippingAddressChangeFn: PaymentRequestUpdateEvent => void; // function provided by user
-  _shippingOptionChangeFn: PaymentRequestUpdateEvent => void; // function provided by user
+  _acceptPromiseResolver?: (value: any) => void;
+  _acceptPromiseRejecter?: (reason: any) => void;
+  _shippingAddressChangeFn?: (event: PaymentRequestUpdateEvent) => void; // function provided by user
+  _shippingOptionChangeFn?: (event: PaymentRequestUpdateEvent) => void; // function provided by user
+
+  _shippingAddressChangeSubscription?: EmitterSubscription;
+  _shippingOptionChangeSubscription?: EmitterSubscription;
+  _userDismissSubscription?: EmitterSubscription;
+  _userAcceptSubscription?: EmitterSubscription;
+
+  static canMakePaymentsUsingNetworks =
+    NativePayments.canMakePaymentsUsingNetworks;
+
+  static MerchantCapabilities = {
+    debit: 'debit',
+    credit: 'credit',
+    emv: 'emv'
+  };
 
   constructor(
-    methodData: Array<PaymentMethodData> = [],
-    details?: PaymentDetailsInit = [],
-    options?: PaymentOptions = {}
+    methodData: PaymentMethodData[] = [],
+    details: PaymentDetailsInit,
+    options: Partial<PaymentOptions> = {}
   ) {
     options = { ...options };
 
-    const { merchantCapabilities } = options;
-    if (merchantCapabilities) {
-      options.merchantCapabilities = merchantCapabilities.reduce(
+
+    if (options.merchantCapabilities) {
+      options.merchantCapabilities = options.merchantCapabilities.reduce(
         (capabilitiesMap, capability) => {
           capabilitiesMap[capability] = true;
           return capabilitiesMap;
@@ -128,12 +123,8 @@ export default class PaymentRequest {
       );
     }
 
-    // 9. Let serializedModifierData be an empty list.
-    let serializedModifierData = [];
-
+    // TODO: Look into how payment details modifiers are used.
     // 10. Process payment details modifiers:
-    // TODO
-    // - Look into how payment details modifiers are used.
     // processPaymentDetailsModifiers(details, serializedModifierData)
 
     // 11. Let request be a new PaymentRequest.
@@ -151,25 +142,23 @@ export default class PaymentRequest {
     this._details = details;
 
     // 16. Set request.[[serializedModifierData]] to serializedModifierData.
-    this._serializedModifierData = serializedModifierData;
+    // this._serializedModifierData = [];
 
     // 17. Set request.[[serializedMethodData]] to serializedMethodData.
     this._serializedMethodData = JSON.stringify(methodData);
 
     // Set attributes (18-20)
-    this._id = details.id;
+    this.id = details.id;
 
     // 18. Set the value of request's shippingOption attribute to selectedShippingOption.
-    this._shippingOption = selectedShippingOption;
+    this.shippingOption = selectedShippingOption;
 
     // 19. Set the value of the shippingAddress attribute on request to null.
-    this._shippingAddress = null;
-    // 20. If options.requestShipping is set to true, then set the value of the shippingType attribute on request to options.shippingType. Otherwise, set it to null.
-    this._shippingType =
-      IS_IOS && options.requestShipping === true ? options.shippingType : null;
+    this.shippingAddress = null;
 
-    // React Native Payments specific 👇
-    // ---------------------------------
+    // 20. If options.requestShipping is set to true, then set the value of the shippingType attribute on request to options.shippingType. Otherwise, set it to null.
+    this.shippingType =
+      IS_IOS && options.shippingType && options.requestShipping === true ? options.shippingType : null;
 
     // Setup event listeners
     this._setupEventListeners();
@@ -180,14 +169,6 @@ export default class PaymentRequest {
 
     const platformMethodData = getPlatformMethodData(methodData, Platform.OS);
     const normalizedDetails = convertDetailAmountsToString(details);
-
-    // Validate gateway config if present
-    if (hasGatewayConfig(platformMethodData)) {
-      validateGateway(
-        getGatewayName(platformMethodData),
-        NativePayments.supportedGateways
-      );
-    }
 
     NativePayments.createPaymentRequest(
       platformMethodData,
@@ -202,17 +183,13 @@ export default class PaymentRequest {
       USER_DISMISS_EVENT,
       this._closePaymentRequest.bind(this)
     );
+
     this._userAcceptSubscription = DeviceEventEmitter.addListener(
       USER_ACCEPT_EVENT,
       this._handleUserAccept.bind(this)
     );
 
     if (IS_IOS) {
-      this._gatewayErrorSubscription = DeviceEventEmitter.addListener(
-        GATEWAY_ERROR_EVENT,
-        this._handleGatewayError.bind(this)
-      );
-
       // https://www.w3.org/TR/payment-request/#onshippingoptionchange-attribute
       this._shippingOptionChangeSubscription = DeviceEventEmitter.addListener(
         INTERNAL_SHIPPING_OPTION_CHANGE_EVENT,
@@ -228,7 +205,7 @@ export default class PaymentRequest {
   }
 
   _handleShippingAddressChange(postalAddress: PaymentAddress) {
-    this._shippingAddress = postalAddress;
+    this.shippingAddress = postalAddress;
 
     const event = new PaymentRequestUpdateEvent(
       SHIPPING_ADDRESS_CHANGE_EVENT,
@@ -245,28 +222,50 @@ export default class PaymentRequest {
 
     // Eventually calls `PaymentRequestUpdateEvent._handleDetailsUpdate` when
     // after a details are returned
-    this._shippingAddressChangeFn(event);
+    this._shippingAddressChangeFn?.(event);
   }
 
-  _handleShippingOptionChange({ selectedShippingOptionId }: Object) {
+  _handleShippingOptionChange(value: { selectedShippingOptionId: string }) {
     // Update the `shippingOption`
-    this._shippingOption = selectedShippingOptionId;
+    this.shippingOption = value.selectedShippingOptionId;
 
     const event = new PaymentRequestUpdateEvent(
       SHIPPING_OPTION_CHANGE_EVENT,
       this
     );
 
-    this._shippingOptionChangeFn(event);
+    this._shippingOptionChangeFn?.(event);
   }
 
-  _getPlatformDetails(details: *) {
-    return IS_IOS
-      ? this._getPlatformDetailsIOS(details)
-      : this._getPlatformDetailsAndroid(details);
-  }
+  //  _getPlatformDetailsAndroid(
+  //   details: {
+  //   googleTransactionId: string,
+  //   payerEmail: string,
+  //   paymentDescription: string,
+  //   shippingAddress: Object
+  //   }
+  // ) {
+  //   const { googleTransactionId, paymentDescription } = details;
 
-  _getPlatformDetailsIOS(details: PaymentDetailsIOSRaw): PaymentDetailsIOS {
+  //   return {
+  //   googleTransactionId,
+  //   paymentDescription,
+  //   // On Android, the recommended flow is to have user's confirm prior to
+  //   // retrieving the full wallet.
+  //   getPaymentToken: () =>
+  //     NativePayments.getFullWalletAndroid(
+  //       googleTransactionId,
+  //       getPlatformMethodData(
+  //         JSON.parse(this._serializedMethodData, Platform.OS)
+  //       ),
+  //       convertDetailAmountsToString(this._details)
+  //     )
+  //   };
+  // }
+
+  _getPlatformDetails(details: PaymentDetailsIOSRaw): PaymentDetailsIOS {
+    if (!IS_IOS) throw new Error('Not implemented');
+
     const {
       paymentData: serializedPaymentData,
       billingContact: serializedBillingContact,
@@ -303,34 +302,10 @@ export default class PaymentRequest {
     };
   }
 
-  _getPlatformDetailsAndroid(details: {
-    googleTransactionId: string,
-    payerEmail: string,
-    paymentDescription: string,
-    shippingAddress: Object
-  }) {
-    const { googleTransactionId, paymentDescription } = details;
-
-    return {
-      googleTransactionId,
-      paymentDescription,
-      // On Android, the recommended flow is to have user's confirm prior to
-      // retrieving the full wallet.
-      getPaymentToken: () =>
-        NativePayments.getFullWalletAndroid(
-          googleTransactionId,
-          getPlatformMethodData(
-            JSON.parse(this._serializedMethodData, Platform.OS)
-          ),
-          convertDetailAmountsToString(this._details)
-        )
-    };
-  }
-
   _handleUserAccept(details: {
     transactionIdentifier: string,
     paymentData: string,
-    shippingAddress: Object,
+    shippingAddress: PaymentAddress | null,
     payerEmail: string,
     paymentToken?: string,
     paymentMethod: Object
@@ -341,17 +316,17 @@ export default class PaymentRequest {
     // Developers will only have access to it in the `PaymentResponse`.
     if (IS_ANDROID) {
       const { shippingAddress } = details;
-      this._shippingAddress = shippingAddress;
+      this.shippingAddress = shippingAddress;
     }
 
     const paymentResponse = new PaymentResponse({
       requestId: this.id,
       methodName: IS_IOS ? 'apple-pay' : 'android-pay',
       shippingAddress: this._options.requestShipping
-        ? this._shippingAddress
+        ? this.shippingAddress
         : null,
       details: this._getPlatformDetails(details),
-      shippingOption: IS_IOS ? this._shippingOption : null
+      shippingOption: IS_IOS ? this.shippingOption : null
       // payerName: this._options.requestPayerName ? this._shippingAddress.recipient : null,
       // payerPhone: this._options.requestPayerPhone ? this._shippingAddress.phone : null,
       // payerEmail: IS_ANDROID && this._options.requestPayerEmail
@@ -359,32 +334,24 @@ export default class PaymentRequest {
       //   : null
     });
 
-    return this._acceptPromiseResolver(paymentResponse);
-  }
-
-  _handleGatewayError(details: { error: string }) {
-    return this._acceptPromiseRejecter(new GatewayError(details.error));
+    return this._acceptPromiseResolver?.(paymentResponse);
   }
 
   _closePaymentRequest(reject = true) {
     this._state = 'closed';
 
-    if (reject) this._acceptPromiseRejecter(new Error('AbortError'));
+    if (reject) this._acceptPromiseRejecter?.(new Error('AbortError'));
 
     // Remove event listeners before aborting.
-    this._removeEventListeners();
-  }
-
-  _removeEventListeners() {
-    // Internal Events
-    this._userDismissSubscription.remove();
-    this._userAcceptSubscription.remove();
+    this._userDismissSubscription?.remove();
+    this._userAcceptSubscription?.remove();
 
     if (IS_IOS) {
-      this._shippingAddressChangeSubscription.remove();
-      this._shippingOptionChangeSubscription.remove();
+      this._shippingAddressChangeSubscription?.remove();
+      this._shippingOptionChangeSubscription?.remove();
     }
   }
+
 
   stopRequest() {
     if (this._state !== 'closed') this._closePaymentRequest(false);
@@ -394,7 +361,7 @@ export default class PaymentRequest {
   // https://www.w3.org/TR/payment-request/#onshippingoptionchange-attribute
   addEventListener(
     eventName: 'shippingaddresschange' | 'shippingoptionchange',
-    fn: e => Promise<any>
+    fn: any
   ) {
     if (eventName === SHIPPING_ADDRESS_CHANGE_EVENT) {
       return (this._shippingAddressChangeFn = fn.bind(this));
@@ -405,19 +372,11 @@ export default class PaymentRequest {
     }
   }
 
-  // https://www.w3.org/TR/payment-request/#id-attribute
-  get id(): string {
-    return this._id;
-  }
-
-  // https://www.w3.org/TR/payment-request/#shippingaddress-attribute
-  get shippingAddress(): null | PaymentAddress {
-    return this._shippingAddress;
-  }
-
-  // https://www.w3.org/TR/payment-request/#shippingoption-attribute
-  get shippingOption(): null | string {
-    return this._shippingOption;
+  // https://www.w3.org/TR/payment-request/#canmakepayment-method
+  canMakePayments() {
+    return NativePayments.canMakePayments(
+      getPlatformMethodData(JSON.parse(this._serializedMethodData), Platform.OS)
+    );
   }
 
   // https://www.w3.org/TR/payment-request/#show-method
@@ -449,39 +408,19 @@ export default class PaymentRequest {
   }
 
   // https://www.w3.org/TR/payment-request/#abort-method
-  abort(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      // We can't abort if the PaymentRequest isn't shown or already closed
-      if (this._state !== 'interactive') {
-        return reject(new Error('InvalidStateError'));
-      }
+  async abort(): Promise<void> {
+    // We can't abort if the PaymentRequest isn't shown or already closed
+    if (this._state !== 'interactive') {
+      throw new Error('InvalidStateError');
+    }
 
-      // Try to dismiss the UI
-      NativePayments.abort(err => {
-        if (err) {
-          return reject(new Error('InvalidStateError'));
-        }
-
+    // Try to dismiss the UI
+    try {
+      await NativePayments.abort()
         this._closePaymentRequest();
 
-        // Return `undefined` as proposed in the spec.
-        return resolve(undefined);
-      });
-    });
+    } catch (error) {
+      new Error('InvalidStateError')
+    }
   }
-
-  // https://www.w3.org/TR/payment-request/#canmakepayment-method
-  canMakePayments(): Promise<boolean> {
-    return NativePayments.canMakePayments(
-      getPlatformMethodData(JSON.parse(this._serializedMethodData), Platform.OS)
-    );
-  }
-
-  static canMakePaymentsUsingNetworks =
-    NativePayments.canMakePaymentsUsingNetworks;
-  static MerchantCapabilities = {
-    debit: 'debit',
-    credit: 'credit',
-    emv: 'emv'
-  };
 }
