@@ -1,9 +1,14 @@
-// @flow
+export type PaymentMethodIOSData = {
+  merchantIdentifier: string,
+  supportedNetworks: Array<string>,
+  countryCode: string,
+  currencyCode: string,
+}
 
 // https://www.w3.org/TR/payment-request/#paymentmethoddata-dictionary
 export type PaymentMethodData = {
   supportedMethods: Array<string>,
-  data: Object
+  data: PaymentMethodIOSData
 };
 
 // https://www.w3.org/TR/payment-request/#dom-paymentcurrencyamount
@@ -20,15 +25,13 @@ export type PaymentDetailsBase = {
 };
 
 // https://www.w3.org/TR/payment-request/#paymentdetailsinit-dictionary
-export type PaymentDetailsInit = {
-  ...PaymentDetailsBase,
+export type PaymentDetailsInit = PaymentDetailsBase & {
   id?: string,
   total: PaymentItem
 };
 
 // https://www.w3.org/TR/payment-request/#paymentdetailsupdate-dictionary
-export type PaymentDetailsUpdate = {
-  ...PaymentDetailsBase,
+export type PaymentDetailsUpdate = PaymentDetailsBase & {
   error: string,
   total: PaymentItem
 };
@@ -91,9 +94,9 @@ export type PaymentShippingOption = {
 export type PaymentComplete = 'fail' | 'success' | 'unknown';
 
 export type PaymentDetailsIOS = {
-  paymentData: ?Object,
-  billingContact?: ?Object,
-  shippingContact?: ?Object,
+  paymentData?: Object,
+  billingContact?: Object,
+  shippingContact?: Object,
   paymentToken?: string,
   transactionIdentifier: string,
   paymentMethod: Object

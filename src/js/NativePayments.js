@@ -1,24 +1,10 @@
-// @flow
-
-import type { PaymentDetailsBase } from './types';
-
 import { NativeModules, Platform } from 'react-native';
 const { ReactNativePayments } = NativeModules;
 
 const IS_ANDROID = Platform.OS === 'android';
 const noop = () => {};
 
-const NativePayments: {
-  canMakePayments: boolean,
-  canMakePaymentsUsingNetworks: boolean,
-  supportedGateways: Array<string>,
-  createPaymentRequest: PaymentDetailsBase => Promise<any>,
-  handleDetailsUpdate: PaymentDetailsBase => Promise<any>,
-  show: () => Promise<any>,
-  abort: () => Promise<any>,
-  complete: PaymentComplete => Promise<any>,
-  getFullWalletAndroid: string => Promise<any>
-} = {
+const NativePayments = {
   supportedGateways: IS_ANDROID
     ? [] // On Android, Payment Gateways are supported out of the gate.
     : ReactNativePayments
