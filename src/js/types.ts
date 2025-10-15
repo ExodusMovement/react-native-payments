@@ -49,6 +49,8 @@ export type PaymentShippingType = 'shipping' | 'delivery' | 'pickup';
 
 export type PaymentMerchantCapability = 'emv' | 'debit' | 'credit';
 
+export type MerchantCapabilities = PaymentMerchantCapability[] | Record<PaymentMerchantCapability, true>
+
 // https://www.w3.org/TR/payment-request/#paymentoptions-dictionary
 export type PaymentOptions = {
   requestPayerName: boolean,
@@ -57,7 +59,7 @@ export type PaymentOptions = {
   requestShipping: boolean,
   requestBilling: boolean,
   shippingType: PaymentShippingType,
-  merchantCapabilities?: PaymentMerchantCapability[]
+  merchantCapabilities?: MerchantCapabilities
 };
 
 // https://www.w3.org/TR/payment-request/#paymentitem-dictionary
@@ -110,3 +112,10 @@ export type PaymentDetailsIOSRaw = {
   transactionIdentifier: string,
   paymentMethod: Object
 };
+
+export type PaymentDetailsAndroid = {
+  googleTransactionId: string,
+  payerEmail: string,
+  paymentDescription: string,
+  shippingAddress: Object
+}

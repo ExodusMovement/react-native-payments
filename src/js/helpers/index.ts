@@ -1,19 +1,41 @@
 import type {
+  MerchantCapabilities,
   PaymentDetailsInit,
   PaymentItem,
+  PaymentMerchantCapability,
+  PaymentMethodData,
   PaymentShippingOption
 } from '../types';
 
 import { DOMException, ConstructorError } from '../errors';
+import { Platform } from 'react-native';
 
 type AmountValue = string | number;
 
-function isNumber(value) {
+function isNumber(value: any): value is number {
   return typeof value === 'number';
 }
 
-function isString(value) {
+function isString(value: any): value is string {
   return typeof value === 'string';
+}
+
+export function transformMerchantCapabilities(
+  merchantCapabilities?: MerchantCapabilities
+): Record<PaymentMerchantCapability, true> | undefined {
+  if (!merchantCapabilities) return undefined;
+
+  if (Array.isArray(merchantCapabilities)) {
+    return merchantCapabilities.reduce(
+      (acc, capability) => {
+        acc[capability] = true;
+        return acc;
+      },
+      {} as Record<PaymentMerchantCapability, true>
+    );
+  }
+
+  return merchantCapabilities;
 }
 
 export function isValidDecimalMonetaryValue(
@@ -30,7 +52,7 @@ export function isNegative(amountValue: AmountValue): boolean {
   return isNumber(amountValue) ? amountValue < 0 : amountValue.startsWith('-');
 }
 
-export function isValidStringAmount(stringAmount): boolean {
+export function isValidStringAmount(stringAmount: string): boolean {
   if (typeof stringAmount !== 'string')
     throw new TypeError('Expected a string');
 
@@ -85,8 +107,8 @@ export function convertDetailAmountsToString(
 }
 
 export function getPlatformMethodData(
-  methodData: Array<PaymentMethodData>,
-  platformOS: 'ios' | 'android'
+  methodData: PaymentMethodData[],
+  platformOS: typeof Platform.OS
 ) {
   const platformSupportedMethod =
     platformOS === 'ios' ? 'apple-pay' : 'android-pay';
@@ -104,7 +126,9 @@ export function getPlatformMethodData(
 
 // Validators
 
-export function validateTotal(total, errorType = Error): void {
+type AnyError = new (...args: any[]) => Error
+
+export function validateTotal(total: PaymentItem, errorType: AnyError = Error): void {
   // Should Vailidator take an errorType to prepopulate "Failed to construct 'PaymentRequest'"
 
   if (total === undefined) {
@@ -112,6 +136,7 @@ export function validateTotal(total, errorType = Error): void {
   }
 
   const hasTotal = total && total.amount && total.amount.value;
+
   // Check that there is a total
   if (!hasTotal) {
     throw new errorType(`Missing required member(s): amount, label.`);
@@ -169,7 +194,7 @@ export function validatePaymentMethods(methodData): Array {
   return serializedMethodData;
 }
 
-export function validateDisplayItems(displayItems, errorType = Error): void {
+export function validateDisplayItems(displayItems: PaymentItem[], errorType: AnyError = Error): void {
   // Check that the value of each display item is a valid decimal monetary value
   if (displayItems) {
     displayItems.forEach((item: PaymentItem) => {
@@ -188,7 +213,7 @@ export function validateDisplayItems(displayItems, errorType = Error): void {
   }
 }
 
-export function validateShippingOptions(details, errorType = Error): void {
+export function validateShippingOptions(details, errorType: AnyError = Error): void {
   if (details.shippingOptions === undefined) {
     return undefined;
   }
