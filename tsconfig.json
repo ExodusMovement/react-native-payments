@@ -12,7 +12,8 @@
     "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
     "noEmit": true,
-    "allowJs": true
+    "allowJs": true,
+    "jsx": "react-native"
   },
   "include": ["src", "declarations.d.ts"],
   "exclude": ["node_modules"]

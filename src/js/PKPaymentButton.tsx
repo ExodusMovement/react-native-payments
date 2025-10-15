@@ -21,20 +21,28 @@ type PKPaymentButtonStyle =
   //   A black button with white lettering.
   | 'black';
 
-type Props = $Exact<{
+type Props = {
   style: ButtonStyle,
   type: ButtonType,
   width?: number,
   height?: number,
   cornerRadius?: number,
   onPress: Function
-}>;
+};
 
-const RNPKPaymentButton = requireNativeComponent('PKPaymentButton', null, {
-  nativeOnly: { onPress: true }
-});
+type HostComponentProps = {
+  buttonStyle: ButtonStyle,
+  buttonType: ButtonType,
+  width?: number,
+  height?: number,
+  cornerRadius?: number,
+  onPress: Function
+}
+
+const RNPKPaymentButton = requireNativeComponent<HostComponentProps>('PKPaymentButton')
 
 export type ButtonType = PKPaymentButtonType;
+
 export type ButtonStyle = PKPaymentButtonStyle;
 
 export class PKPaymentButton extends React.Component<Props> {

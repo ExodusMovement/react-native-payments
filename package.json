@@ -22,6 +22,7 @@
     "es6-error": "^4.0.2"
   },
   "devDependencies": {
+    "@types/react": "^17.0.0",
     "babel-jest": "20.0.3",
     "babel-preset-react-native": "2.0.0",
     "husky": "^0.14.1",
