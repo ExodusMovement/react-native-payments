@@ -2,7 +2,7 @@ examples
 .babelrc
 .flowconfig
 docs/
-src
+/src
 tsconfig.json
 tsconfig.build.json
 declarations.d.ts
