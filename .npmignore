@@ -3,3 +3,5 @@ examples
 .flowconfig
 docs/
 src
+tsconfig.json
+tsconfig.build.json
