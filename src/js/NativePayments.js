@@ -5,12 +5,6 @@ const IS_ANDROID = Platform.OS === 'android';
 const noop = () => {};
 
 const NativePayments = {
-  supportedGateways: IS_ANDROID
-    ? [] // On Android, Payment Gateways are supported out of the gate.
-    : ReactNativePayments
-    ? ReactNativePayments.supportedGateways
-    : [],
-
   canMakePayments(methodData: object) {
     return new Promise((resolve, reject) => {
       if (IS_ANDROID) {

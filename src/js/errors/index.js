@@ -34,9 +34,3 @@ export class ConstructorError extends ReactNativePaymentsError {
     super(`Failed to construct 'PaymentRequest':  ${errorMessage}`);
   }
 }
-
-export class GatewayError extends ExtendableError {
-  constructor(errorMessage) {
-    super(`${errorMessage}`);
-  }
-}

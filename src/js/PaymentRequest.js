@@ -26,13 +26,10 @@ import {
   validatePaymentMethods,
   validateDisplayItems,
   validateShippingOptions,
-  getSelectedShippingOption,
-  hasGatewayConfig,
-  getGatewayName,
-  validateGateway
+  getSelectedShippingOption
 } from './helpers';
 
-import { ConstructorError, GatewayError } from './errors';
+import { ConstructorError } from './errors';
 
 // Constants
 import {
@@ -41,8 +38,7 @@ import {
   INTERNAL_SHIPPING_ADDRESS_CHANGE_EVENT,
   INTERNAL_SHIPPING_OPTION_CHANGE_EVENT,
   USER_DISMISS_EVENT,
-  USER_ACCEPT_EVENT,
-  GATEWAY_ERROR_EVENT
+  USER_ACCEPT_EVENT
 } from './constants';
 
 const noop = () => {};
@@ -69,7 +65,6 @@ export default class PaymentRequest {
   _shippingOptionChangeSubscription: any; // TODO: - add proper type annotation
   _userDismissSubscription: any; // TODO: - add proper type annotation
   _userAcceptSubscription: any; // TODO: - add proper type annotation
-  _gatewayErrorSubscription: any; // TODO: - add proper type annotation
   _shippingAddressChangesCount: number;
 
   _shippingAddressChangeFn: PaymentRequestUpdateEvent => void; // function provided by user
@@ -178,14 +173,6 @@ export default class PaymentRequest {
     const platformMethodData = getPlatformMethodData(methodData, Platform.OS);
     const normalizedDetails = convertDetailAmountsToString(details);
 
-    // Validate gateway config if present
-    if (hasGatewayConfig(platformMethodData)) {
-      validateGateway(
-        getGatewayName(platformMethodData),
-        NativePayments.supportedGateways
-      );
-    }
-
     NativePayments.createPaymentRequest(
       platformMethodData,
       normalizedDetails,
@@ -205,11 +192,6 @@ export default class PaymentRequest {
     );
 
     if (IS_IOS) {
-      this._gatewayErrorSubscription = DeviceEventEmitter.addListener(
-        GATEWAY_ERROR_EVENT,
-        this._handleGatewayError.bind(this)
-      );
-
       // https://www.w3.org/TR/payment-request/#onshippingoptionchange-attribute
       this._shippingOptionChangeSubscription = DeviceEventEmitter.addListener(
         INTERNAL_SHIPPING_OPTION_CHANGE_EVENT,
@@ -357,10 +339,6 @@ export default class PaymentRequest {
     });
 
     return this._acceptPromiseResolver(paymentResponse);
-  }
-
-  _handleGatewayError(details: { error: string }) {
-    return this._acceptPromiseRejecter(new GatewayError(details.error));
   }
 
   _closePaymentRequest(reject = true) {
