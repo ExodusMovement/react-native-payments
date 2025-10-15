@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "target": "es2022",
+    "moduleResolution": "node",
+    "declaration": true,
+    "useDefineForClassFields": true,
+    "removeComments": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "downlevelIteration": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "allowJs": true
+  },
+  "include": ["src", "declarations.d.ts"],
+  "exclude": ["node_modules"]
+}
