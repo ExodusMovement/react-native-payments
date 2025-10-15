@@ -1,5 +1,6 @@
 import type {
   MerchantCapabilities,
+  PaymentDetailsBase,
   PaymentDetailsInit,
   PaymentItem,
   PaymentMerchantCapability,
@@ -90,7 +91,7 @@ export function convertDetailAmountsToString(
     }
 
     if (
-      Array.isArray(details[key]) &&
+      Array.isArray(details[key as keyof PaymentDetailsInit]) &&
       (key === 'displayItems' || key === 'shippingOptions')
     ) {
       return Object.assign({}, acc, {
@@ -101,7 +102,7 @@ export function convertDetailAmountsToString(
     }
 
     return acc;
-  }, {});
+  }, {} as PaymentDetailsInit);
 
   return nextDetails;
 }
@@ -118,7 +119,7 @@ export function getPlatformMethodData(
   );
 
   if (!platformMethod) {
-    throw new DOMException('The payment method is not supported');
+    throw new DOMException('NotSupportedError');
   }
 
   return platformMethod.data;
@@ -157,13 +158,12 @@ export function validateTotal(total: PaymentItem, errorType: AnyError = Error): 
   }
 }
 
-export function validatePaymentMethods(methodData): Array {
+export function validatePaymentMethods(methodData: PaymentMethodData[]) {
   // Check that at least one payment method is passed in
   if (methodData.length < 1) {
     throw new ConstructorError(`At least one payment method is required`);
   }
 
-  let serializedMethodData = [];
   // Check that each payment method has at least one payment method identifier
   methodData.forEach(paymentMethod => {
     if (paymentMethod.supportedMethods === undefined) {
@@ -183,18 +183,13 @@ export function validatePaymentMethods(methodData): Array {
         `Each payment method needs to include at least one payment method identifier`
       );
     }
-
-    const serializedData = paymentMethod.data
-      ? JSON.stringify(paymentMethod.data)
-      : null;
-
-    serializedMethodData.push([paymentMethod.supportedMethods, serializedData]);
   });
-
-  return serializedMethodData;
 }
 
-export function validateDisplayItems(displayItems: PaymentItem[], errorType: AnyError = Error): void {
+export function validateDisplayItems(
+  displayItems: PaymentItem[],
+  errorType: AnyError = Error
+): void {
   // Check that the value of each display item is a valid decimal monetary value
   if (displayItems) {
     displayItems.forEach((item: PaymentItem) => {
@@ -213,18 +208,20 @@ export function validateDisplayItems(displayItems: PaymentItem[], errorType: Any
   }
 }
 
-export function validateShippingOptions(details, errorType: AnyError = Error): void {
+export function validateShippingOptions(
+  details: PaymentDetailsBase,
+  errorType: AnyError = Error
+): void {
   if (details.shippingOptions === undefined) {
     return undefined;
   }
 
-  let selectedShippingOption = null;
   if (!Array.isArray(details.shippingOptions)) {
     throw new errorType(`Iterator getter is not callable.`);
   }
 
   if (details.shippingOptions) {
-    let seenIDs = [];
+    let seenIDs: string[] = [];
 
     details.shippingOptions.forEach((shippingOption: PaymentShippingOption) => {
       if (shippingOption.id === undefined) {
@@ -260,7 +257,7 @@ export function validateShippingOptions(details, errorType: AnyError = Error): v
   }
 }
 
-export function getSelectedShippingOption(shippingOptions) {
+export function getSelectedShippingOption(shippingOptions: PaymentShippingOption[]) {
   // Return null if shippingOptions isn't an Array
   if (!Array.isArray(shippingOptions)) {
     return null;
@@ -281,5 +278,5 @@ export function getSelectedShippingOption(shippingOptions) {
   }
 
   // Return first shippingOption if no shippingOption was marked as selected
-  return shippingOptions[0].id;
+  return shippingOptions[0]?.id ?? null;
 }

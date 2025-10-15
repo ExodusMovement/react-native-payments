@@ -58,7 +58,6 @@ export default class PaymentRequestUpdateEvent {
 
     validateTotal(value.total, DOMException);
     validateDisplayItems(value.displayItems, DOMException);
-    validateShippingOptions(value.shippingOptions, DOMException);
 
     // 1. Let details be the result of converting value to a PaymentDetailsUpdate dictionary. If this throws an exception, abort the update with the thrown exception.
     const details: PaymentDetailsInit = Object.assign({}, value);
