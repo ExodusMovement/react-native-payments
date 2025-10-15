@@ -5,3 +5,4 @@ docs/
 src
 tsconfig.json
 tsconfig.build.json
+declarations.d.ts
