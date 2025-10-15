@@ -95,10 +95,27 @@ export type PaymentShippingOption = {
 // https://www.w3.org/TR/payment-request/#paymentcomplete-enum
 export type PaymentComplete = 'fail' | 'success' | 'unknown';
 
+type IOSContact = {
+  phoneNumber: string;
+  emailAddress: string;
+  givenName: string;
+  familyName: string;
+  phoneticGivenName: string;
+  phoneticFamilyName: string;
+  addressLines: string[];
+  subLocality: string;
+  locality: string;
+  postalCode: string;
+  subAdministrativeArea: string;
+  administrativeArea: string;
+  country: string;
+  countryCode: string;
+}
+
 export type PaymentDetailsIOS = {
   paymentData?: Object,
-  billingContact?: Object,
-  shippingContact?: Object,
+  billingContact?: IOSContact,
+  shippingContact?: IOSContact,
   paymentToken?: string,
   transactionIdentifier: string,
   paymentMethod: Object

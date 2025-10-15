@@ -33,10 +33,8 @@ import type {
   PaymentOptions,
   PaymentAddress,
   PaymentShippingType,
-  PaymentDetailsIOS,
   PaymentDetailsIOSRaw,
-  PaymentDetailsAndroid,
-  PaymentMerchantCapability
+  PaymentDetailsIOS,
 } from './types';
 
 const noop = () => {};
@@ -233,13 +231,25 @@ export default class PaymentRequest {
     this._shippingOptionChangeFn?.(event);
   }
 
-  _getPlatformDetails(details: PaymentDetailsIOSRaw | PaymentDetailsAndroid) {
-    return IS_IOS
-      ? this._getPlatformDetailsIOS(details as PaymentDetailsIOSRaw)
-      : this._getPlatformDetailsAndroid(details as PaymentDetailsAndroid);
-  }
+  // _getPlatformDetailsAndroid(details: PaymentDetailsAndroid) {
+  //   const { googleTransactionId, paymentDescription } = details;
 
-  _getPlatformDetailsIOS(details: PaymentDetailsIOSRaw): PaymentDetailsIOS {
+  //   // On Android, the recommended flow is to have user's confirm prior to retrieving the full wallet.
+  //   return {
+  //     googleTransactionId,
+  //     paymentDescription,
+  //     getPaymentToken: () =>
+  //       NativePayments.getFullWalletAndroid(
+  //         googleTransactionId,
+  //         getPlatformMethodData(
+  //           JSON.parse(this._serializedMethodData), Platform.OS
+  //         ),
+  //         convertDetailAmountsToString(this._details)
+  //       )
+  //   };
+  // }
+
+  _getPlatformDetails(details: PaymentDetailsIOSRaw): PaymentDetailsIOS {
     const {
       paymentData: serializedPaymentData,
       billingContact: serializedBillingContact,
@@ -276,24 +286,6 @@ export default class PaymentRequest {
     };
   }
 
-  _getPlatformDetailsAndroid(details: PaymentDetailsAndroid) {
-    const { googleTransactionId, paymentDescription } = details;
-
-    // On Android, the recommended flow is to have user's confirm prior to retrieving the full wallet.
-    return {
-      googleTransactionId,
-      paymentDescription,
-      getPaymentToken: () =>
-        NativePayments.getFullWalletAndroid(
-          googleTransactionId,
-          getPlatformMethodData(
-            JSON.parse(this._serializedMethodData), Platform.OS
-          ),
-          convertDetailAmountsToString(this._details)
-        )
-    };
-  }
-
   _handleUserAccept(details: {
     transactionIdentifier: string,
     paymentData: string,
@@ -317,12 +309,12 @@ export default class PaymentRequest {
         ? this._shippingAddress
         : null,
       details: this._getPlatformDetails(details),
-      shippingOption: IS_IOS ? this._shippingOption : null
-      // payerName: this._options.requestPayerName ? this._shippingAddress.recipient : null,
-      // payerPhone: this._options.requestPayerPhone ? this._shippingAddress.phone : null,
-      // payerEmail: IS_ANDROID && this._options.requestPayerEmail
-      //   ? details.payerEmail
-      //   : null
+      shippingOption: IS_IOS ? this._shippingOption ?? null : null,
+      payerName: this._options.requestPayerName ? this._shippingAddress?.recipient ?? null : null,
+      payerPhone: this._options.requestPayerPhone ? this._shippingAddress?.phone ?? null : null,
+      payerEmail: IS_ANDROID && this._options.requestPayerEmail
+        ? details.payerEmail
+        : null
     });
 
     return this._acceptPromiseResolver?.(paymentResponse);

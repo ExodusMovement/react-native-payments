@@ -1,7 +1,8 @@
 import type {
   PaymentComplete,
   PaymentDetailsInit,
-  PaymentAddress
+  PaymentAddress,
+  PaymentDetailsIOS
 } from './types';
 
 import NativePayments from './NativePayments';
@@ -9,23 +10,23 @@ import NativePayments from './NativePayments';
 export default class PaymentResponse {
   _requestId: string;
   _methodName: string;
-  _details: PaymentDetailsInit;
-  _shippingAddress: null | PaymentAddress;
-  _shippingOption: null | string;
-  _payerName: null | string;
-  _payerPhone: null | string;
-  _payerEmail: null | string;
+  _details: PaymentDetailsIOS;
+  _shippingAddress: PaymentAddress | null;
+  _shippingOption: string | null;
+  _payerName: string | null;
+  _payerPhone: string | null;
+  _payerEmail: string | null;
   _completeCalled: boolean;
 
   constructor(paymentResponse: {
     requestId: string,
     methodName: string,
-    details: PaymentDetailsInit,
-    shippingAddress: PaymentAddress,
-    shippingOption: string,
-    payerName: string,
-    payerPhone: string,
-    payerEmail: string
+    details: PaymentDetailsIOS,
+    shippingAddress: PaymentAddress | null,
+    shippingOption: string | null,
+    payerName: string | null,
+    payerPhone: string | null,
+    payerEmail: string | null
   }) {
     // Set properties as readOnly
     this._requestId = paymentResponse.requestId;
@@ -52,7 +53,7 @@ export default class PaymentResponse {
   }
 
   // https://www.w3.org/TR/payment-request/#details-attribute
-  get details(): PaymentDetailsInit {
+  get details(): PaymentDetailsIOS {
     return this._details;
   }
 
