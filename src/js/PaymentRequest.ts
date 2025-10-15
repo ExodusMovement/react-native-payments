@@ -385,17 +385,15 @@ export default class PaymentRequest {
       this._state = 'interactive';
 
       // These arguments are passed because on Android we don't call createPaymentRequest.
-      const platformMethodData = getPlatformMethodData(
-        JSON.parse(this._serializedMethodData),
-        Platform.OS
-      );
-      const normalizedDetails = convertDetailAmountsToString(this._details);
-      const options = this._options;
+      // const platformMethodData = getPlatformMethodData(
+      //   JSON.parse(this._serializedMethodData),
+      //   Platform.OS
+      // );
+      // const normalizedDetails = convertDetailAmountsToString(this._details);
+      // const options = this._options;
 
       // Note: resolve will be triggered via _acceptPromiseResolver() from somwhere else
-      NativePayments.show(platformMethodData, normalizedDetails, options).catch(
-        reject
-      );
+      NativePayments.show().catch(reject);
     });
   }
 
@@ -415,8 +413,6 @@ export default class PaymentRequest {
 
   // https://www.w3.org/TR/payment-request/#canmakepayment-method
   canMakePayments(): Promise<boolean> {
-    return NativePayments.canMakePayments(
-      getPlatformMethodData(JSON.parse(this._serializedMethodData), Platform.OS)
-    );
+    return NativePayments.canMakePayments();
   }
 }

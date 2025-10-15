@@ -4,12 +4,10 @@ import {
   SHIPPING_ADDRESS_CHANGE_EVENT,
   SHIPPING_OPTION_CHANGE_EVENT
 } from './constants';
-const noop = () => {};
 
 import PaymentRequest from './PaymentRequest';
 import NativePayments from './NativePayments';
 
-// Helpers
 import {
   validateTotal,
   validateDisplayItems,
@@ -17,10 +15,14 @@ import {
   convertDetailAmountsToString
 } from './helpers';
 
-// Errors
 import { DOMException } from './errors';
+import { PaymentDetailsInit, PaymentDetailsUpdate } from './types';
 
-function isPromise(value) {
+type EventName = typeof SHIPPING_ADDRESS_CHANGE_EVENT | typeof SHIPPING_OPTION_CHANGE_EVENT;
+
+const noop = () => {};
+
+function isPromise(value: any): value is Promise<any> {
   if (!value.then) {
     return false;
   }
@@ -32,10 +34,8 @@ export default class PaymentRequestUpdateEvent {
   name: string;
   target: PaymentRequest;
   _waitForUpdate: boolean;
-  _handleDetailsChange: PaymentDetailsModifier => Promise<any>;
-  _resetEvent: any;
 
-  constructor(name, target) {
+  constructor(name: EventName, target: PaymentRequest) {
     if (
       name !== SHIPPING_ADDRESS_CHANGE_EVENT &&
       name !== SHIPPING_OPTION_CHANGE_EVENT
@@ -53,7 +53,7 @@ export default class PaymentRequestUpdateEvent {
     this._resetEvent = this._resetEvent.bind(this);
   }
 
-  _handleDetailsChange(value: PaymentDetailsBase) {
+  _handleDetailsChange(value: PaymentDetailsUpdate) {
     const target = this.target;
 
     validateTotal(value.total, DOMException);
@@ -61,19 +61,12 @@ export default class PaymentRequestUpdateEvent {
     validateShippingOptions(value.shippingOptions, DOMException);
 
     // 1. Let details be the result of converting value to a PaymentDetailsUpdate dictionary. If this throws an exception, abort the update with the thrown exception.
-    const details: PaymentDetailsUpdate = Object.assign({}, value);
+    const details: PaymentDetailsInit = Object.assign({}, value);
 
     // 2. Let serializedModifierData be an empty list.
-    let serializedModifierData = [];
-
     // 3. Let selectedShippingOption be null.
-    let selectedShippingOption = null;
-
     // 4. Let shippingOptions be an empty sequence<PaymentShippingOption>.
-    let shippingOptions = [];
-
     // 5. Validate and canonicalize the details:
-    // TODO: implmentation
 
     // 6. Update the PaymentRequest using the new details:
     target._details = details;
@@ -112,13 +105,12 @@ export default class PaymentRequestUpdateEvent {
     // In this case, the user agent should display an error indicating this, and may indicate that that the currently-chosen shipping address is invalid in some way.
     // The user agent should use the error member of details, if it is present, to give more information about why there are no valid shipping options for that address.
 
-    // React Native Payments specific 👇
-    // ---------------------------------
     const normalizedDetails = convertDetailAmountsToString(target._details);
+
     return (
-      NativePayments.handleDetailsUpdate(normalizedDetails, DOMException)
+      NativePayments.handleDetailsUpdate(normalizedDetails)
         // 14. Upon fulfillment of detailsPromise with value value
-        .then(this._resetEvent())
+        .then(this._resetEvent)
         // On iOS the `selectedShippingMethod` defaults back to the first option
         // when updating shippingMethods.  So we call the `_handleShippingOptionChange`
         // method with the first shippingOption id so that JS is in sync with Apple Pay.
@@ -129,7 +121,7 @@ export default class PaymentRequestUpdateEvent {
 
           if (
             target._details.shippingOptions &&
-            target._details.shippingOptions.length > 0
+            target._details.shippingOptions[0]
           ) {
             target._handleShippingOptionChange({
               selectedShippingOptionId: target._details.shippingOptions[0].id
@@ -160,10 +152,7 @@ export default class PaymentRequestUpdateEvent {
   updateWith(
     PaymentDetailsModifierOrPromise:
       | PaymentDetailsUpdate
-      | ((
-          PaymentDetailsModifier,
-          PaymentAddress
-        ) => Promise<PaymentDetailsUpdate>)
+      | Promise<PaymentDetailsUpdate>
   ) {
     // 1. Let event be this PaymentRequestUpdateEvent instance.
     let event = this;
@@ -219,6 +208,5 @@ export default class PaymentRequestUpdateEvent {
 
       return this._handleDetailsChange(paymentDetailsModifier);
     }
-    // 13 & 14 happen in `this._handleDetailsChange`.
   }
 }
