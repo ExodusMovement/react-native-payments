@@ -8,6 +8,11 @@
     "test": "jest",
     "precommit": "lint-staged"
   },
+  "files": [
+    "lib",
+    "android",
+    "!**/__tests__/**"
+  ],
   "repository": "https://github.com/naoufal/react-native-payments",
   "keywords": [
     "react",
