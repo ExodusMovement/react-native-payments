@@ -29,17 +29,19 @@ export function transformMerchantCapabilities(
   if (!merchantCapabilities) return undefined;
 
   if (Array.isArray(merchantCapabilities)) {
-    return merchantCapabilities.reduce(
+    merchantCapabilities = merchantCapabilities.reduce(
       (acc, capability) => {
-        if (!CAPABILITIES.has(capability)) {
-          throw new TypeError(`Invalid merchant capability: ${capability}`);
-        }
-
         acc[capability] = true;
         return acc;
       },
       Object.create(null) as Record<PaymentMerchantCapability, true>
     );
+  }
+
+  for (const key in merchantCapabilities) {
+    if (!CAPABILITIES.has(key as PaymentMerchantCapability)) {
+      throw new TypeError(`Invalid merchant capability: ${key}`);
+    }
   }
 
   return merchantCapabilities;
