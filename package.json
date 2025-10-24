@@ -1,6 +1,6 @@
 {
   "name": "@exodus/react-native-payments",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "main": "lib/js/index.js",
   "scripts": {
     "build": "rm -rf lib && mkdir -p lib && cp -r src/ios lib/ios && tsc -p tsconfig.build.json ",
@@ -49,7 +49,7 @@
       "lib/js/__tests__"
     ]
   },
-    "lint-staged": {
+  "lint-staged": {
     "*.js": [
       "prettier --single-quote --write",
       "git add"
