@@ -77,7 +77,7 @@ export default class PaymentRequest {
   constructor(
     methodData: PaymentMethodData[] = [],
     details: PaymentDetailsInit,
-    options: Partial<PaymentOptions> = {}
+    options: Partial<PaymentOptions> = Object.create(null)
   ) {
     options = { ...options };
 
