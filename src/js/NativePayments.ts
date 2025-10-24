@@ -75,7 +75,7 @@ function canMakePaymentsUsingNetworks(usingNetworks: []): Promise<boolean> {
 function createPaymentRequest(
   methodData: PaymentMethodData['data'],
   details: PaymentDetailsInit,
-  options: Partial<PaymentOptions> = {}
+  options: Partial<PaymentOptions> = Object.create(null)
 ): Promise<void> {
   return new Promise((resolve, reject) => {
 

@@ -21,6 +21,8 @@ function isString(value: any): value is string {
   return typeof value === 'string';
 }
 
+const CAPABILITIES: Set<PaymentMerchantCapability> = new Set(['emv', 'debit', 'credit'])
+
 export function transformMerchantCapabilities(
   merchantCapabilities?: MerchantCapabilities
 ): Record<PaymentMerchantCapability, true> | undefined {
@@ -29,10 +31,14 @@ export function transformMerchantCapabilities(
   if (Array.isArray(merchantCapabilities)) {
     return merchantCapabilities.reduce(
       (acc, capability) => {
+        if (!CAPABILITIES.has(capability)) {
+          throw new TypeError(`Invalid merchant capability: ${capability}`);
+        }
+
         acc[capability] = true;
         return acc;
       },
-      {} as Record<PaymentMerchantCapability, true>
+      Object.create(null) as Record<PaymentMerchantCapability, true>
     );
   }
 
@@ -69,9 +75,9 @@ export function toString(amountValue: AmountValue) {
 export function convertObjectAmountToString(
   objectWithAmount: PaymentItem | PaymentShippingOption
 ): PaymentItem | PaymentShippingOption {
-  return Object.assign({}, objectWithAmount, {
+  return Object.assign(Object.create(null), objectWithAmount, {
     amount: Object.assign(
-      {},
+      Object.create(null),
       {
         value: toString(objectWithAmount.amount.value),
         currency: objectWithAmount.amount.currency
@@ -85,7 +91,7 @@ export function convertDetailAmountsToString(
 ): PaymentDetailsInit {
   const nextDetails = Object.keys(details).reduce((acc, key) => {
     if (key === 'total') {
-      return Object.assign({}, acc, {
+      return Object.assign(Object.create(null), acc, {
         [key]: convertObjectAmountToString(details[key])
       });
     }
@@ -94,7 +100,7 @@ export function convertDetailAmountsToString(
       Array.isArray(details[key as keyof PaymentDetailsInit]) &&
       (key === 'displayItems' || key === 'shippingOptions')
     ) {
-      return Object.assign({}, acc, {
+      return Object.assign(Object.create(null), acc, {
         [key]: details[key].map(paymentItemOrShippingOption =>
           convertObjectAmountToString(paymentItemOrShippingOption)
         )
@@ -102,7 +108,7 @@ export function convertDetailAmountsToString(
     }
 
     return acc;
-  }, {} as PaymentDetailsInit);
+  }, Object.create(null) as PaymentDetailsInit);
 
   return nextDetails;
 }
