@@ -118,7 +118,7 @@ function handleDetailsUpdate(details: PaymentDetailsInit): Promise<void> {
 // );
 function show() {
   return new Promise((resolve, reject) => {
-    if (IS_ANDROID) return;
+    if (IS_ANDROID) return reject(new Error('NotSupportedError'));
 
     ReactNativePayments.show((err, paymentToken) => {
       return err ? reject(err) : resolve(true);
