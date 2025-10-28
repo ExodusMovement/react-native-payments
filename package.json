@@ -1,6 +1,6 @@
 {
   "name": "@exodus/react-native-payments",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "main": "lib/js/index.js",
   "types": "lib/js/index.d.ts",
   "scripts": {
