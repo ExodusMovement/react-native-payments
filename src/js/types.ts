@@ -118,7 +118,10 @@ export type PaymentDetailsIOS = {
   shippingContact?: IOSContact,
   paymentToken?: string,
   transactionIdentifier: string,
-  paymentMethod: Object
+  paymentMethod: {
+    displayName: string,
+    network: string,
+  }
 };
 
 export type PaymentDetailsIOSRaw = {
@@ -127,7 +130,10 @@ export type PaymentDetailsIOSRaw = {
   shippingContact?: string,
   paymentToken?: string,
   transactionIdentifier: string,
-  paymentMethod: Object
+  paymentMethod: {
+    displayName: string,
+    network: string,
+  }
 };
 
 export type PaymentDetailsAndroid = {
