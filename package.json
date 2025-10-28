@@ -2,6 +2,7 @@
   "name": "@exodus/react-native-payments",
   "version": "2.0.4",
   "main": "lib/js/index.js",
+  "types": "lib/js/index.d.ts",
   "scripts": {
     "build": "rm -rf lib && mkdir -p lib && cp -r src/ios lib/ios && tsc -p tsconfig.build.json ",
     "clean": "tsc --build --clean",

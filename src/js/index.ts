@@ -3,3 +3,4 @@ import NativePayments from './NativePayments';
 
 export const PaymentRequest = _PaymentRequest;
 export const openPaymentSetup = NativePayments.openPaymentSetup;
+export * from './types';
