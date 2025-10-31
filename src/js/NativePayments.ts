@@ -49,11 +49,13 @@ const IS_ANDROID = Platform.OS === 'android';
 
 const noop = () => {};
 
+const isSupported = IS_ANDROID ? false :ReactNativePayments.canMakePayments
+
 // For Android: ReactNativePayments.canMakePayments(methodData, err => reject(err), canMakePayments => resolve(canMakePayments));
 // On iOS, canMakePayments is exposed as a constant.
 function canMakePayments(): Promise<boolean> {
   return new Promise((resolve, reject) => {
-    resolve(IS_ANDROID ? false :ReactNativePayments.canMakePayments);
+    resolve(isSupported);
   });
 }
 
@@ -178,6 +180,7 @@ const openPaymentSetup =
 // }
 
 const NativePayments = {
+  isSupported,
   canMakePayments,
   canMakePaymentsUsingNetworks,
   createPaymentRequest,
