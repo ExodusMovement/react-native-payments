@@ -292,7 +292,7 @@ export default class PaymentRequest {
     shippingAddress: PaymentAddress | null,
     payerEmail: string,
     paymentToken?: string,
-    paymentMethod: Object
+    paymentMethod: PaymentDetailsIOSRaw['paymentMethod']
   }) {
     // On Android, we don't have `onShippingAddressChange` events, so we
     // set the shipping address when the user accepts.
